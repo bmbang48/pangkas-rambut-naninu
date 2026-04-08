@@ -8,8 +8,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
-})->middleware('auth:sanctum');
+})->middleware('auth:sanctum')->name('api.user');
 
-Route::apiResource('barbers', BarberController::class);
-Route::apiResource('services', ServiceController::class);
-Route::apiResource('bookings', BookingController::class);
+Route::name('api.')->group(function () {
+    Route::get('/bookings/available-slots', [BookingController::class, 'availableSlots'])->name('bookings.available-slots');
+    Route::get('/available-slots', [BookingController::class, 'availableSlots'])->name('available-slots'); // Alias
+    Route::apiResource('barbers', BarberController::class);
+    Route::apiResource('services', ServiceController::class);
+    Route::apiResource('bookings', BookingController::class);
+});

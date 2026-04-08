@@ -1,0 +1,103 @@
+openapi: 3.1.0
+info:
+  title: Naninu Barbershop API
+  description: API for fetching available time slots and booking haircuts for customers.
+  version: 1.0.0
+servers:
+  - url: https://believes-fires-site-reservations.trycloudflare.com/api
+paths:
+  /bookings/available-slots:
+    get:
+      summary: Get available booking slots
+      operationId: getAvailableSlots
+      parameters:
+        - name: barber_id
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: "ID of the Barber. 1 = Ahmad Rizki, 2 = Budi Santoso, 3 = Dimas Pratama, 4 = Eko Wijaya."
+        - name: service_id
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: "ID of the Service. 1 = Haircut (30m), 2 = Haircut+Wash (45m), 3 = Haircut+Beard (45m)."
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Date of the booking in YYYY-MM-DD format.
+      responses:
+        '200':
+          description: An array of string timeslots available for booking.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  slots:
+                    type: array
+                    items:
+                      type: string
+  /bookings:
+    post:
+      summary: Create a booking reservation
+      operationId: createBooking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - barber_id
+                - service_id
+                - customer_name
+                - phone
+                - booking_date
+                - booking_time
+                - status
+              properties:
+                barber_id:
+                  type: integer
+                  description: Barber ID chosen by the user.
+                service_id:
+                  type: integer
+                  description: Service ID chosen by the user.
+                customer_name:
+                  type: string
+                  description: Name of the customer requesting the booking.
+                phone:
+                  type: string
+                  description: Phone number of the customer. Format with country code.
+                booking_date:
+                  type: string
+                  format: date
+                  description: Booking date (YYYY-MM-DD).
+                booking_time:
+                  type: string
+                  description: Time slot for the booking (e.g. 10:30) (Must be retrieved from available-slots endpoint first).
+                notes:
+                  type: string
+                  description: Any additional notes or requests from the customer.
+                status:
+                  type: string
+                  default: pending
+                  description: Always strict set to "pending".
+      responses:
+        '200':
+          description: Booking created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string

@@ -18,7 +18,7 @@ class BookingController extends Controller
         //
         $bookings = Booking::with(['barbers', 'services'])->latest()->paginate(10);
 
-        return new BookingResource(true, "Menampilkan Data Bookings", $bookings);
+        return new BookingResource(true, "Daftar Pesanan Pangkas Rambut Naninu", $bookings);
     }
 
     /**
@@ -35,7 +35,7 @@ class BookingController extends Controller
         while ($start < $end) {
             $slots[] = date("H:i", $start);
 
-            $start = strtotime("+30 minutes", $start);
+            $start = strtotime("+15 minutes", $start);
         }
 
         return $slots;
@@ -62,17 +62,21 @@ class BookingController extends Controller
             $slotEnd = strtotime("+$duration minutes", $slotStart);
 
             $conflict = false;
+            
+            if ($slotEnd > strtotime("21:00")) {
+                $conflict = true;
+            } else {
+                foreach ($bookings as $booking) {
+                    $bookingStart = strtotime($booking->booking_time);
 
-            foreach ($bookings as $booking) {
-                $bookingStart = strtotime($booking->booking_time);
+                    $bookingService = Service::find($booking->service_id);
+                    $bookingEnd = strtotime("+{$bookingService->duration} minutes", $bookingStart);
 
-                $bookingService = Service::find($booking->service_id);
-                $bookingEnd = strtotime("+{$bookingService->duration} minutes", $bookingStart);
+                    if ($slotStart < $bookingEnd && $slotEnd > $bookingStart) {
 
-                if ($slotStart < $bookingEnd && $slotEnd > $bookingStart) {
-
-                    $conflict = true;
-                    break;
+                        $conflict = true;
+                        break;
+                    }
                 }
             }
             if (!$conflict) {
@@ -86,16 +90,33 @@ class BookingController extends Controller
         ]);
     }
 
+    public function updateStatus(Request $request, Booking $booking)
+    {
+        $request->validate([
+            'status' => 'required|in:pending,completed,canceled'
+        ]);
+
+        $booking->update([
+            'status' => $request->status
+        ]);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Status pesanan berhasil diperbarui']);
+        }
+
+        return back()->with('success', 'Status pesanan berhasil diperbarui');
+    }
+
     public function store(Request $request)
     {
         //
         $validator = Validator::make($request->all(), [
             'barber_id' => 'required|exists:barbers,id',
-            'service_id' => 'required|exists:materials,id',
+            'service_id' => 'required|exists:services,id',
             'customer_name' => 'required|string|max:255',
             'phone' => 'required|string|max:16',
-            'booking_date' => 'required',
-            'booking_time' => 'required',
+            'booking_date' => 'required|date_format:Y-m-d',
+            'booking_time' => 'required|date_format:H:i',
             'notes' => 'nullable|string',
             'status' => 'required'
         ]);
@@ -139,7 +160,7 @@ class BookingController extends Controller
 
 
 
-        return new BookingResource(true, "Data Booking Berhasil Ditambahkan", $booking);
+        return new BookingResource(true, "Pesanan berhasil dibuat", $booking);
     }
 
     /**
@@ -150,7 +171,7 @@ class BookingController extends Controller
         //
         $booking = Booking::find($id);
 
-        return new BookingResource(true, "Detail Data Booking", $booking);
+        return new BookingResource(true, "Detail Pesanan", $booking);
     }
 
     /**
@@ -162,11 +183,11 @@ class BookingController extends Controller
         $booking = Booking::find($id);
         $validator = Validator::make($request->all(), [
             'barber_id' => 'required|exists:barbers,id',
-            'service_id' => 'required|exists:materials,id',
+            'service_id' => 'required|exists:services,id',
             'customer_name' => 'required|string|max:255',
             'phone' => 'required|string|max:16',
-            'booking_date' => 'required',
-            'booking_time' => 'required',
+            'booking_date' => 'required|date_format:Y-m-d',
+            'booking_time' => 'required|date_format:H:i',
             'notes' => 'nullable|string',
             'status' => 'required'
         ]);
@@ -197,6 +218,6 @@ class BookingController extends Controller
 
         $booking->delete();
 
-        return new BookingResource(true, "Data Booking Berhasil Dihapus", null);
+        return new BookingResource(true, "Pesanan berhasil dihapus", null);
     }
 }

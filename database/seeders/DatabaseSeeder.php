@@ -18,8 +18,21 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name' => 'Admin User',
+            'email' => 'admin@example.com',
+        ]);
+
+        \App\Models\Barber::insert([
+            ['name' => 'Ahmad Rizki', 'experience' => 8],
+            ['name' => 'Budi Santoso', 'experience' => 5],
+            ['name' => 'Dimas Pratama', 'experience' => 6],
+            ['name' => 'Eko Wijaya', 'experience' => 4],
+        ]);
+
+        \App\Models\Service::insert([
+            ['name' => 'Haircut', 'duration' => 30, 'price' => 30000],
+            ['name' => 'Haircut + Wash', 'duration' => 45, 'price' => 40000],
+            ['name' => 'Haircut + Beard', 'duration' => 45, 'price' => 45000],
         ]);
     }
 }
